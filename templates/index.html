@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API BitLogicx</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body>
+    <header>
+        <h1>BACCCRAT TEST API (BitLogicx)</h1>
+    </header>
+    <main>
+        <div id="grid" class="grid"></div>
+        <div class="buttons">
+            <button class="player" onclick="addWinner('Player')">PLAYER</button>
+            <button class="tie" onclick="addWinner('Tie')">TIE</button>
+            <button class="banker" onclick="addWinner('Banker')">BANKER</button>
+            <button class="undo" onclick="undo()">UNDO</button>
+            <button class="calculate" onclick="calculate()">CALCULATE</button>
+            <button class="reset" onclick="reset()">RESET</button>
+        </div>
+        <div id="confidence" class="confidence">Prediction Probabilities will be displayed here.</div>
+    </main>
+</body>
+</html>
