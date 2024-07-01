@@ -3,11 +3,11 @@ let losses = 0;
 let winStreak = 0;
 let lossStreak = 0;
 let currentStreak = 0;
-let lastwinner = '';
-let predictedwinner = '';
+let lastWinner = '';
+let predictedWinner = '';
 let previous_winners = [];
 let predictionData = null; // Global variable to store prediction data
-check = 0;
+let Nextwinner = '';
 
 function updateGrid() {
     const grid = document.getElementById('grid');
@@ -21,13 +21,17 @@ function updateGrid() {
 }
 
 function addWinner(winner) {
+    Nextwinner = winner;
     if (previous_winners.length >= 100) previous_winners.shift(); // Maintain a maximum of 100 entries
     previous_winners.push(winner);
+    // console.log(previous_winners);
     updateGrid();
+    calculateWinLoss();
     updateStats();
+    fetchPrediction(); // Fetch prediction after updating stats
 }
 
-function calculate() {
+function fetchPrediction() {
     if (previous_winners.length === 0) return; // Return if no previous winners
 
     fetch('/predict', {
@@ -46,17 +50,19 @@ function calculate() {
             Banker: ${(data.Banker * 100).toFixed(2)}%<br>
             Tie: ${(data.Tie * 100).toFixed(2)}%
         `;
-        updateStats(data);
-        check = 1;
+        predictedWinner = getBestPrediction(data);
+        updateStats();
     });
 }
 
 function undo() {
-    if (previous_winners.length === 0){
-        //re
+    if (previous_winners.length === 0) {
+        reset();
+        return;
     }
     previous_winners.pop();
     updateGrid();
+    calculateWinLoss();
     updateStats();
 }
 
@@ -73,25 +79,17 @@ function reset() {
 }
 
 function getBestPrediction(data) {
-    if (data.Player > data.Banker && data.Player > data.Tie) {
-        return 'Player';
-    } else if (data.Banker > data.Player && data.Banker > data.Tie) {
-        return 'Banker';
-    } else {
-        return 'Tie';
-    }
+    if (!data) return 'None';
+    if (data.Player > data.Banker && data.Player > data.Tie) return 'Player';
+    if (data.Banker > data.Player && data.Banker > data.Tie) return 'Banker';
+    if (data.Tie > data.Player && data.Tie > data.Banker) return 'Tie';
 }
 
-function updateStats(data = null) {
-    if (check == 0){
-        return;
-    }
-    if (data) {
-        predictionData = data; // Ensure the latest data is used
-    }
-    //calulate the win and loss skip the first one
+function calculateWinLoss() {
+    // console.log(previous_winners.length);
+
     if (previous_winners.length > 1) {
-        if (previous_winners[previous_winners.length - 1] === predictedwinner) {
+        if (Nextwinner === predictedWinner) {
             wins++;
             winStreak++;
             lossStreak = 0;
@@ -103,30 +101,17 @@ function updateStats(data = null) {
             currentStreak = lossStreak;
         }
     }
-    predictedwinner = getBestPrediction(predictionData);
-    if (!predictionData || previous_winners.length === 0) {
-        document.getElementById('stats').innerHTML = `
-            <strong>Game Stats</strong><br>
-            Best Prediction: ${predictedwinner} <br>
-            Wins: ${wins}, Losses: ${losses}<br>
-            Win Percentage: 0%<br>
-            Win Streak: 0<br>
-            Loss Streak: 0<br>
-            Current Streak: 0<br>
-            Explanation: <br>
-            Units to Bet: 0
-        `;
-        check = 0;
-        return;
-    }
-    
+}
+
+function updateStats() {
+    predictedWinner = getBestPrediction(predictionData);
 
     const totalGames = wins + losses;
     const winPercentage = totalGames > 0 ? (wins / totalGames * 100).toFixed(2) : 0;
 
     document.getElementById('stats').innerHTML = `
         <strong>Game Stats</strong><br>
-        Best Prediction: ${predictedwinner} <br>
+        Best Prediction: ${predictedWinner} <br>
         Wins: ${wins}, Losses: ${losses}<br>
         Win Percentage: ${winPercentage}%<br>
         Win Streak: ${winStreak}<br>
